@@ -1,0 +1,282 @@
+#define _CRT_SECURE_NO_WARNINGS
+// 指定的源文件的开头定义
+#include <stdio.h>
+#include <stdlib.h>
+#include <String.h>
+
+/*
+* https://blog.csdn.net/weixin_51775646/article/details/121221130
+*/
+
+struct Student
+{
+    char name[20]; // 名字
+    int age;       // 年龄
+    char tel[20];  // 电话
+    char addr[20]; // 住址
+};
+
+struct Node
+{ // 定义结构体 的数据域和指针
+    struct Student data;
+    struct Node *Next;
+};
+
+// 初始化所有函数
+void SystemMenu();                              // 菜单
+void KeyRecive();                               // 接受信息
+void InsertStudent();                           // 插入学生信息
+struct Node *CreatNode();                       // 创建结构体
+struct Node *CreatNewNode(struct Student data); // 结构体的数据域
+void CreatNodeList(struct Node *HeadNode, struct Student data);
+void deletestudent(); // 删除信息
+void deletenode(struct Node *headnode, char *name);
+// struct Node* changenode(struct Node* S);
+struct Node *SearchNode(struct Node *StudentNode, char *name);
+void PrintNode(struct Node *StudentNode);
+void PrintList(struct Node *StudentNode);
+void ReadFromFile(char *filename, struct Node *StudentNode); // 读取文件
+void SaveFile1(char *filename, struct Node *StudentNode);    // 保存文件
+struct Node *StudentNode;
+
+char S1[5] = {'s', '.', 't', 'x', 't'};
+
+void SystemMenu()
+{ // 学生管理系统菜单
+    printf("---------------------学生信息管理系统---------------------------\n");
+    printf("\t\t\t1.插入信息\n");
+    printf("\t\t\t2.浏览信息\n");
+    printf("\t\t\t3.删除信息\n");
+    printf("\t\t\t4.修改信息\n");
+    printf("\t\t\t5.查找信息\n");
+    printf("\t\t\t6.退出系统\n");
+    printf("-----------------------------------------------------------------\n");
+}
+
+void KeyRecive()
+{
+    int x;
+    struct Student s; // 学生人数
+    scanf("%d", &x);
+    switch (x)
+    {
+    case 1:
+        printf("\t【插入信息】\n");
+        InsertStudent(); // 插入学生信息
+        SaveFile1(S1, StudentNode);
+        printf("插入操作执行完成！-------------");
+        break;
+    case 2:
+        printf("\t【浏览信息】\n");
+        PrintNode(StudentNode);
+        printf("浏览操作执行完成--------------");
+        break;
+    case 3:
+        printf("\t【删除信息】\n");
+        deletestudent();
+        SaveFile1(S1, StudentNode);
+        printf("删除操作执行完成---------------");
+        break;
+    case 4:
+        printf("\t【更改信息】\n");
+        printf("请输入更改的姓名:");
+        scanf("%s", &s.name);
+        if (SearchNode(StudentNode, s.name) == NULL) // 异常处理报错
+        {
+            printf("未找到相关信息！\n");
+        }
+        else
+        {
+            struct Node *s1 = SearchNode(StudentNode, s.name);
+            printf("请输入新的学生信息:\n");
+            printf("请输入同学姓名:\n");
+            scanf("%s", &s1->data.name);
+            printf("请输入同学年龄:\n");
+            scanf("%d", &s1->data.age);
+            printf("请输入同学电话:\n");
+            scanf("%s", &s1->data.tel);
+            printf("请输入同学住址:\n");
+            scanf("%s", &s1->data.addr);
+            printf("修改操作执行完成---------------");
+            SaveFile1(S1, StudentNode);
+        }
+        break;
+    case 5:
+        printf("\t【查找信息】\n");
+        printf("请输入查找的姓名:");
+        scanf("%s", &s.name);
+        if (SearchNode(StudentNode, s.name) == NULL)
+        {
+            printf("未找到相关信息！\n");
+        }
+        else
+        {
+            PrintList(SearchNode(StudentNode, s.name));
+            printf("查找操作执行完成---------------");
+        }
+        break;
+    default:
+        printf("输入数据有误，重新输入");
+        KeyRecive();
+        break;
+    case 6:
+        printf("\t【退出系统】\n");
+        exit(0);
+        break;
+    }
+}
+
+void InsertStudent()
+{ // 插入函数
+    int x;
+    struct Student S;
+    printf("请输入学生的数目:");
+    scanf("%d", &x);
+    for (int i = 1; i <= x; i++)
+    {
+        printf("请分别输入第%d个同学姓名:\n", i);
+        scanf("%s", &S.name);
+        printf("请分别输入第%d个同学年龄:\n", i);
+        scanf("%d", &S.age);
+        printf("请分别输入第%d个同学电话:\n", i);
+        scanf("%s", &S.tel);
+        printf("请分别输入第%d个同学住址:\n", i);
+        scanf("%s", &S.addr);
+        CreatNodeList(StudentNode, S);
+    }
+}
+
+struct Node *CreatNode() // 建立头节点
+{
+    struct Node *HeadNode = (struct Node *)malloc(sizeof(struct Node));
+    HeadNode->Next = NULL;
+    return HeadNode;
+}
+
+struct Node *CreatNewNode(struct Student data)
+{ // 建立新结点函数
+    struct Node *NewNode = (struct Node *)malloc(sizeof(struct Node));
+    NewNode->data = data;
+    NewNode->Next = NULL;
+    return NewNode;
+}
+
+void CreatNodeList(struct Node *HeadNode, struct Student data)
+{ // 建立新节点并插入数据
+    struct Node *NewNode = CreatNewNode(data);
+    NewNode->Next = HeadNode->Next;
+    HeadNode->Next = NewNode;
+}
+
+void deletestudent()
+{ // 删除节点|
+    char name[10];
+    printf("请输入需要删除的学生名字:\n");
+    scanf("%s", &name);
+    deletenode(StudentNode, name);
+}
+
+void deletenode(struct Node *headnode, char *name)
+{ // 删除节点操作
+    struct Node *posnode = headnode->Next;
+    struct Node *posnodefront = headnode;
+    if (posnode == NULL)
+    {
+        printf("数据为空，无法删除");
+    }
+    else
+    {
+        while (strcmp(posnode->data.name, name))
+        {
+            posnodefront = posnode;
+            posnode = posnodefront->Next;
+            if (posnode == NULL)
+            {
+                printf("未找到指定位置，无法删除");
+                return;
+            }
+        }
+        posnodefront->Next = posnode->Next;
+        free(posnode);
+    }
+}
+
+struct Node *SearchNode(struct Node *StudentNode, char *name)
+{
+    // 查找节点
+    struct Node *pMove = StudentNode->Next;
+    if (pMove == NULL)
+    {
+        printf("未找到该学生");
+        return (pMove);
+    }
+    else
+    {
+        while (strcmp(pMove->data.name, name))
+        {
+            pMove = pMove->Next;
+            if (pMove == NULL)
+                break;
+        }
+        return pMove;
+    }
+}
+
+void PrintList(struct Node *StudentNode)
+{ // 打印单个节点
+    printf("姓名\t年龄\t电话\t\t住址\n");
+    printf("%s\t%d\t%s\t%s\n", StudentNode->data.name, StudentNode->data.age, StudentNode->data.tel, StudentNode->data.addr);
+}
+void PrintNode(struct Node *StudentNode)
+{ // 浏览信息
+    struct Node *pow = StudentNode->Next;
+    printf("姓名\t年龄\t电话\t\t住址\n");
+    while (pow)
+    {
+        printf("%s\t%d\t%s\t%s\n", pow->data.name, pow->data.age, pow->data.tel, pow->data.addr);
+        pow = pow->Next;
+    }
+}
+
+void ReadFromFile(char *filename, struct Node *StudentNode)
+{
+    FILE *fp = fopen(filename, "r");
+    if (fp == NULL)
+    {
+        fp = fopen(filename, "w");
+    }
+    struct Student data;
+    while (fscanf(fp, "%s\t%d\t%s\t%s\n", &data.name, &data.age,
+                  &data.tel, &data.addr) != EOF)
+    {
+        CreatNodeList(StudentNode, data);
+        memset(&data, 0, sizeof(data));
+    }
+    fclose(fp);
+}
+
+void SaveFile1(char *filename, struct Node *StudentNode)
+{
+    FILE *fp = fopen(filename, "w");
+    struct Node *pow = StudentNode->Next;
+    while (pow)
+    {
+        fprintf(fp, "%s\t%d\t%s\t%s\n", pow->data.name, pow->data.age, pow->data.tel, pow->data.addr);
+        pow = pow->Next;
+    }
+    fclose(fp);
+}
+
+int main(void)
+{
+    StudentNode = CreatNode();
+    ReadFromFile(S1, StudentNode);
+    while (1)
+    {
+        SystemMenu();
+        KeyRecive();
+        system("pause");
+        system("cls");
+    }
+    return 0;
+}
